@@ -1,0 +1,4 @@
+import { requireUser } from '@/lib/auth';
+import { changePassword } from './actions';
+export const dynamic='force-dynamic';
+export default async function Password({searchParams}:{searchParams:Promise<{error?:string}>}){await requireUser();const {error}=await searchParams;return <main className="error-panel"><h1>Choose a new password</h1>{error&&<p role="alert">Passwords must match and contain 12–128 characters. If this persists, request a new recovery link.</p>}<form action={changePassword}><label>New password<input name="password" type="password" autoComplete="new-password" required minLength={12} maxLength={128}/></label><label>Confirm password<input name="confirmation" type="password" autoComplete="new-password" required minLength={12} maxLength={128}/></label><button>Update password</button></form></main>;}

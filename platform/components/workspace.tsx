@@ -1,0 +1,3 @@
+import Link from 'next/link';
+import { logout } from '@/app/login/actions';
+export function Workspace({children,email}:{children:React.ReactNode,email?:string}){return <div className="workspace"><aside><Link href="/dashboard" className="wordmark">SPRINGPOOL<span>BUSINESS WORKSPACE</span></Link><p className="nav-label">WORKSPACE</p><nav aria-label="Main navigation"><Link href="/dashboard">Overview <span>↗</span></Link><Link href="/settings/company">Company profile</Link><Link href="/audit">Audit history</Link></nav><div className="account"><small>{email}</small><form action={logout}><button className="secondary">Sign out</button></form></div></aside><main className="content">{children}</main></div>;}
