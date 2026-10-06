@@ -11,8 +11,9 @@ test('PostgreSQL policies enforce tenant isolation, role revocation and append-o
  create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
  grant usage on schema auth,public to authenticated,anon;
  grant execute on function auth.uid() to authenticated,anon;`);
- const file=readdirSync('supabase/migrations').find(f=>f.endsWith('_foundation.sql'))!;
- await db.exec(readFileSync('supabase/migrations/'+file,'utf8'));
+ for(const file of readdirSync('supabase/migrations').filter(f=>f.endsWith('.sql')).sort()) {
+  await db.exec(readFileSync('supabase/migrations/'+file,'utf8'));
+ }
  const a='11111111-1111-4111-8111-111111111111',b='22222222-2222-4222-8222-222222222222';
  const admin='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',dealer='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
  await db.exec(`insert into auth.users values('${admin}'),('${dealer}');

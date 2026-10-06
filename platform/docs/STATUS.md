@@ -39,7 +39,7 @@ Master data; CRM/quotations/orders and portals; inventory ledger and reservation
 - Six automated tests passed, including a PostgreSQL RLS/tamper suite.
 - Cloudflare vinext compatibility scan reported all detected APIs supported; Worker bundle build passed. Generated route types are refreshed by the typecheck script to avoid collisions between the two build tools.
 - Production dependency audit reported zero vulnerabilities at implementation time.
-- Hosted Supabase schema and advisor checks passed: seven tables with RLS, 19 roles, three foundation permissions and eight policies. Security advisor returned no findings. There are no Auth users or organization memberships yet. Authenticated browser sessions and the production Worker runtime remain unverified.
+- Hosted Supabase schema and advisor checks passed: seven tables with RLS, 19 roles, three foundation permissions and eight policies. Security advisor returned no findings. The first owner-designated Auth account now has an ADMIN membership; email verification and password setup remain pending. Authenticated browser sessions and the production Worker runtime remain unverified.
 
 ## Latest verification and publication status
 
@@ -49,3 +49,13 @@ Master data; CRM/quotations/orders and portals; inventory ledger and reservation
 - Supabase foundation migration applied successfully; no business data or user accounts were created.
 - GitHub remote was checked against the connected repository and tracked source scanned for credential patterns. Automatic review still blocked publication to the public repository `Cyberstorm007/springpool-backend`, requiring explicit destination approval. No branch or PR was published.
 - No production Cloudflare deployment or DNS changes were made.
+
+## GitHub publication and initial administrator
+
+- Published `feat/erp-foundation` through the connected GitHub app with explicit owner approval. Draft PR: https://github.com/Cyberstorm007/springpool-backend/pull/1.
+- GitHub CI passed all steps on commit `54fb9f4`, including lint, TypeScript, tests, production dependency audit, Next.js build and Cloudflare Worker build.
+- Created the owner-designated account through Supabase Auth with email verification required. The exact address is stored only in Auth, not this public source repository.
+- Provisioned the SpringPool organization, profile and ADMIN membership transactionally, with an audit record. Registered legal name remains NULL until confirmed by the administrator.
+- Password setup will use recovery when the sign-in application is deployed; the random initial password was neither displayed nor stored in source.
+- The additional nullable-legal-name migration is applied. RLS tests now execute all migrations in order and pass.
+- Public website deployment has not occurred.
