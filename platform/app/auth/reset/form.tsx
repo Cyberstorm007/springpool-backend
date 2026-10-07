@@ -1,13 +1,9 @@
 'use client';
-import { useFormStatus } from 'react-dom';
-import { requestReset } from './actions';
-function Submit() {
-  const { pending } = useFormStatus();
-  return <button type="submit" disabled={pending}>{pending ? 'Sending…' : 'Send reset link'}</button>;
-}
+import { useState } from 'react';
 export default function ResetForm() {
-  return <form action={requestReset}>
+  const [pending, setPending] = useState(false);
+  return <form action="/auth/recover" method="post" onSubmit={() => setPending(true)}>
     <label>Email address<input name="email" type="email" autoComplete="email" required /></label>
-    <Submit />
+    <button type="submit" disabled={pending}>{pending ? 'Sending…' : 'Send reset link'}</button>
   </form>;
 }

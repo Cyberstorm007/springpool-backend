@@ -16,4 +16,4 @@ export async function proxy(request: NextRequest) {
   await supabase.auth.getClaims();
   return response;
 }
-export const config={matcher:['/dashboard/:path*','/settings/:path*','/audit/:path*','/login','/auth/:path*','/api/:path*']};
+export const config={matcher:['/employees/:path*','/attendance/:path*','/work-logs/:path*','/dashboard/:path*','/settings/:path*','/audit/:path*','/login','/auth/:path*','/api/:path*']};

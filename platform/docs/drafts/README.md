@@ -1,0 +1,2 @@
+These three earlier schema sketches have NOT been deployed and are NOT deployment-ready.
+They reference a missing function and contain overly broad member permissions, unprotected financial writes, and cross-organization foreign key gaps. Retained as design notes only. Do not apply them. The tested workforce migration replaces the employee/attendance sketch; other modules require services, workflows, UI, RBAC, and tests before release.

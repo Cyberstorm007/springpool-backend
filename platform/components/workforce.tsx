@@ -1,0 +1,5 @@
+import { today } from '@/lib/workforce/validation';
+export function Feedback({state}:{state?:string}){return state?<p className="notice" role="status">{state==='saved'?'Changes saved.':state==='invalid'?'Check the dates, fields, and your access, then try again.':'Unable to save. Check for a duplicate record, a locked review, or an account that is not an active member of this workspace.'}</p>:null;}
+export function DateFilter({date}:{date:string}){return <form method="get" className="date-filter"><label>Work date (India time)<input type="date" name="date" defaultValue={date} max={today()} required/></label><button>View day</button></form>;}
+export type Staff = {id:string;name:string;active:boolean};
+export function EmployeeSelect({employees,selected}:{employees:Staff[];selected?:string}){return <label>Employee<select name="employee_id" required defaultValue={selected}><option value="">Choose employee</option>{employees.filter(e=>e.active).map(e=><option key={e.id} value={e.id}>{e.name}</option>)}</select></label>;}

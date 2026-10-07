@@ -1,7 +1,7 @@
 import ResetForm from './form';
 const messages: Record<string, string> = {
   invalid: 'Enter a valid email address.',
-  'email-limit': 'The email service has reached its sending limit. No reset email was sent. Please wait up to an hour before trying once more. Your administrator needs to configure a production email service to remove this restriction.',
+  'email-limit': 'Password-reset requests are temporarily limited. No new email was sent. Wait at least 60 seconds before trying once; an hourly sending limit may require a longer wait.',
   wait: 'Too many reset requests. Wait at least 60 seconds before trying again. If you already received an email, use only the newest link.',
   unavailable: 'The reset request could not be completed. Please try again later or contact your administrator.',
   expired: 'This recovery link is invalid, already used, or could not be verified in this browser. Request one new link, then open it once in the same browser.',
