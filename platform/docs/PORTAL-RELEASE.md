@@ -24,4 +24,15 @@ The full master specification is not complete: production planning/BOM/QC, batch
 
 ## Deployment record
 
-Pending verification and publishing.
+Published to the existing Cloudflare Worker `springpool-platform` at https://springpool.org on 8 October 2026 at 20:59 UTC (9 October, 02:29 IST).
+
+- Source: `Cyberstorm007/springpool-backend`, branch `feat/erp-foundation`, commit `d6a469ddac997901c8aceb5c370c523d6cc94467`.
+- Live Worker version: `e638e057-dafa-44bb-9966-1d5f941be09d`.
+- Deployment: `f02b9c95-59ed-44bd-9975-e4a8448036c6`; Cloudflare reports 100% traffic.
+- Previous Worker version for application rollback: `11159220-28f3-4d30-8582-751b623c72d8`. Rolling back the Worker does not reverse database migrations.
+- All 12 tests, lint, type checking, Next build and Cloudflare/Vinext build passed before publishing.
+- Live browser verification: login form renders; signed-out visits to `/portal/requests` and `/alerts` redirect to `/login`. No application errors were observed in the login console (one browser-extension error was unrelated). Authenticated end-to-end acceptance remains outstanding.
+- Direct HTTP probes from the execution environment returned 403; the browser rendered the login successfully. Browser access to `/api/v1/health` was blocked by the client, so its live response is unverified.
+- Production database checks confirm report access is ADMIN/SUPER_ADMIN only, note issuance is disabled, zero enabled messaging channels and zero queued messages.
+- Automatic approval review blocked the core adjusted-invoice migration because it replaces payment, document-state, analytics and portal functions. Its tested draft remains under `docs/drafts/`; explicit approval is required before applying it. No credit/debit notes were present when issuance was disabled.
+- Supabase leaked-password protection remains disabled; full authenticated acceptance, staging and restore rehearsal are still pending. This record does not certify the entire master specification as complete.

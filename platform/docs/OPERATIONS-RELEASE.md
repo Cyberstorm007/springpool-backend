@@ -14,7 +14,7 @@
 - Admin analytics with deterministic revenue, GST, receivables, payables, overdue, expenses, stock-cost estimate, pipeline and operational-signal metrics.
 - Permission-aware global search and CSV exports for invoices, orders, purchases, payments, expenses, attendance, daily work and production. Formula-like CSV values are escaped to prevent spreadsheet injection.
 - Isolated dealer/customer portal with administrator account linking, published-document views, balances and a sanitized catalog projection. Portal users cannot access another customer, internal product cost, notes or assignments.
-- Credit and debit notes issue separate immutable adjustment records against issued invoices instead of editing historical invoices.
+- Credit/debit-note schema and draft balance corrections are prepared; production issuance is disabled pending explicit approval of the core finance migration.
 - The supplied SpringPool Agro-Vet logo is included in the workspace navigation and is ready for document/portal branding.
 
 ## Security and transaction decisions
@@ -56,8 +56,8 @@ This release is **not completion of the 82-section master requirement**. In part
 
 External setup needed for the corresponding future features: approved Meta business/phone/template configuration; a certificate-based signing provider and securely provisioned credentials; authorized legal/bank/tax/company assets; and any paid infrastructure approval. No AI service has been added, consistent with the original requirements.
 
-The follow-up release includes analytics, reports/search, portal submissions/admin review, completed warehouse transfers, credit/debit balance corrections, company branding and nonce-based script security. See PORTAL-RELEASE.md for the deployment record.
+The follow-up release includes analytics, reports/search, portal submissions/admin review, completed warehouse transfers, deferred credit/debit balance corrections, company branding and nonce-based script security. See PORTAL-RELEASE.md for the deployment record.
 
 ## Operational limits
 
-Lists are paginated, but dropdown choices currently cap at 1,000, workforce lists at 200, and inventory movements at the latest 50. Posted invoices remain immutable. Credit/debit notes adjust balances; credits against fully paid invoices requiring refunds are not supported. Payment recording does not move funds. Stock adjustments must use an explanatory reason; they should not substitute for unsupported returns or accounting workflows.
+Lists are paginated, but dropdown choices currently cap at 1,000, workforce lists at 200, and inventory movements at the latest 50. Posted invoices remain immutable. Credit/debit-note issuance is disabled; the drafted correction does not support credits against fully paid invoices requiring refunds. Payment recording does not move funds. Stock adjustments must use an explanatory reason; they should not substitute for unsupported returns or accounting workflows.
