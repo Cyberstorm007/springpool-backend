@@ -1,0 +1,44 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync,readdirSync} from 'node:fs';
+import {PGlite} from '@electric-sql/pglite';
+test('portal isolation, server pricing, review idempotency, disabled integrations and atomic transfers',async()=>{
+ const db=new PGlite();const org='11111111-1111-4111-8111-111111111111',other='22222222-2222-4222-8222-222222222222',admin='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',dealer='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',second='cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+ const customer='11111111-aaaa-4111-8111-111111111111',customer2='11111111-aaaa-4111-8111-111111111112',product='11111111-cccc-4111-8111-111111111111',warehouse='11111111-dddd-4111-8111-111111111111',dest='11111111-dddd-4111-8111-111111111112';
+ try{
+ await db.exec(`create role anon;create role authenticated;create schema auth;create table auth.users(id uuid primary key,email text);create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;grant usage on schema auth,public to authenticated,anon;grant execute on function auth.uid() to authenticated,anon;`);
+ for(const f of readdirSync('supabase/migrations').filter(f=>f.endsWith('.sql')).sort())await db.exec(readFileSync('supabase/migrations/'+f,'utf8'));
+ await db.exec(`insert into auth.users values('${admin}','a@test.invalid'),('${dealer}','d@test.invalid'),('${second}','s@test.invalid');insert into public.organizations(id,name) values('${org}','Test'),('${other}','Other');insert into public.organization_members(organization_id,user_id,role_code) values('${org}','${admin}','ADMIN'),('${org}','${dealer}','DEALER'),('${org}','${second}','CUSTOMER');select set_config('request.jwt.claim.sub','${admin}',false);insert into public.company_settings(organization_id,display_name) values('${org}','Test');insert into public.customers(id,organization_id,name,address,credit_limit) values('${customer}','${org}','Dealer','Delivery address',5000),('${customer2}','${org}','Other customer','Other address',5000);insert into public.products(id,organization_id,name,sku,category,unit,unit_price,gst_rate) values('${product}','${org}','Feed','FEED','Feed','kg',100,18);insert into public.warehouses(id,organization_id,name,code) values('${warehouse}','${org}','Source','S'),('${dest}','${org}','Destination','D');set role authenticated;select public.link_portal_account('${org}','d@test.invalid','${customer}',true);select public.link_portal_account('${org}','s@test.invalid','${customer2}',true);select set_config('request.jwt.claim.sub','${dealer}',false);`);
+ const key='99999999-9999-4999-8999-999999999999';
+ const submit=async(k=key)=>(await db.query<{id:string}>(`select public.submit_portal_request($1,'ORDER','Feed request','Delivery address',$2::jsonb,$3) id`,[org,JSON.stringify([{product_id:product,quantity:2,unit_price:0,total:0}]),k])).rows[0].id;
+ const id=await submit();assert.equal(await submit(),id);
+ const row=(await db.query<{estimated_total:string,items:{unit_price:number}[]}>('select * from public.portal_requests')).rows[0];assert.equal(Number(row.estimated_total),236);assert.equal(row.items[0].unit_price,100);
+ await assert.rejects(db.query('update public.portal_requests set status=$1',['ACCEPTED']));
+ await assert.rejects(db.query(`select public.review_portal_request($1,$2,'ACCEPTED','',$3,'37')`,[org,id,warehouse]));
+ await assert.rejects(db.query(`insert into public.messaging_channels(organization_id,channel) values($1,'TELEGRAM')`,[org]));
+ await db.exec(`select set_config('request.jwt.claim.sub','${second}',false)`);
+ assert.equal((await db.query('select * from public.portal_requests')).rows.length,0);
+ await assert.rejects(db.query('select public.reorder_portal_request($1,$2,$3)',[org,id,key]));
+ await assert.rejects(db.query(`select public.submit_portal_request($1,'SUPPORT','Help','Details','[]',$2)`,[other,key]));
+ await db.exec(`select set_config('request.jwt.claim.sub','${admin}',false)`);
+ const review=async()=>(await db.query<{id:string}>(`select public.review_portal_request($1,$2,'ACCEPTED','Draft ready',$3,'37') id`,[org,id,warehouse])).rows[0].id;
+ const order=await review();assert.ok(order);assert.equal(await review(),order);assert.equal((await db.query('select * from public.business_documents')).rows.length,1);
+ assert.equal((await db.query('select * from public.integration_events')).rows.length,2);
+ assert.equal((await db.query('select * from public.message_outbox')).rows.length,0);
+ await db.query(`insert into public.messaging_channels(organization_id,channel) values($1,'TELEGRAM')`,[org]);await assert.rejects(db.query(`update public.messaging_channels set status='ACTIVE'`));
+ await db.query(`select public.record_stock_change($1,$2,$3,10,'Opening inventory')`,[org,warehouse,product]);
+ const transfer=(qty:number,ref:string)=>(db.query<{id:string}>(`select public.transfer_stock($1,$2,$3,$4,$5,$6,'Warehouse replenishment') id`,[org,warehouse,dest,product,qty,ref]));
+ const transferred=(await transfer(3,'TR-1')).rows[0].id;assert.equal((await transfer(3,'TR-1')).rows[0].id,transferred);
+ await assert.rejects(transfer(4,'TR-1'),/reference already used/);await assert.rejects(transfer(100,'TR-2'),/Stock cannot fall below reservations/);
+ assert.equal((await db.query('select * from public.stock_transfers')).rows.length,1);
+ assert.equal(Number((await db.query<{quantity:string}>('select quantity from public.stock_balances where warehouse_id=$1',[warehouse])).rows[0].quantity),7);
+ assert.equal(Number((await db.query<{quantity:string}>('select quantity from public.stock_balances where warehouse_id=$1',[dest])).rows[0].quantity),3);
+ await db.query(`select public.change_document_state($1,$2,'APPROVE')`,[org,order]);
+ await assert.rejects(transfer(6,'TR-RESERVED'),/Stock cannot fall below reservations/);
+ await db.exec(`select set_config('request.jwt.claim.sub','${dealer}',false)`);
+ await assert.rejects(transfer(1,'TR-FORGED'),/Admin required/);
+ await db.exec(`select set_config('request.jwt.claim.sub','${admin}',false)`);await db.query(`select public.link_portal_account($1,'d@test.invalid',$2,false)`,[org,customer]);await db.exec(`select set_config('request.jwt.claim.sub','${dealer}',false)`);
+ assert.equal((await db.query('select * from public.portal_requests')).rows.length,0);await assert.rejects(submit(),/Portal access/);
+ await db.exec('set role anon');await assert.rejects(db.query('select * from public.portal_requests'));await assert.rejects(submit());
+ }finally{await db.close();}
+});
