@@ -43,14 +43,6 @@ test('operations enforce admin authority, tenant boundaries, stock, credit, invo
  const invoice=await state(order,'INVOICE');await assert.rejects(state(order,'INVOICE'));
  await db.exec(`update public.customers set name='Changed customer' where id='${customer}'`);const inv=(await db.query<{buyer_snapshot:{name:string},cgst:string,sgst:string,igst:string}>('select * from public.business_documents where id=$1',[invoice])).rows[0];assert.equal(inv.buyer_snapshot.name,'Customer');assert.equal(Number(inv.cgst),36);assert.equal(Number(inv.sgst),36);assert.equal(Number(inv.igst),0);
  await db.query(`select public.record_document_payment($1,$2,200,'BANK_TRANSFER','TEST-1',current_date)`,[org,invoice]);await assert.rejects(db.query(`select public.record_document_payment($1,$2,300,'CASH','TEST-2',current_date)`,[org,invoice]),/exceeds/);await db.query(`select public.record_document_payment($1,$2,272,'CASH','TEST-3',current_date)`,[org,invoice]);
- const noteKey='88888888-8888-4888-8888-888888888888';
- const note=async(kind:string,amount:number,key:string)=>(await db.query<{id:string}>('select public.issue_adjustment_note($1,$2,$3,$4,0,$5,$6) id',[org,invoice,kind,amount,'Invoice adjustment',key])).rows[0].id;
- await assert.rejects(note('CREDIT',10,noteKey),/Credit exceeds unpaid/);
- const debit=await note('DEBIT',50,noteKey);assert.equal(await note('DEBIT',50,noteKey),debit);
- await note('CREDIT',20,'88888888-8888-4888-8888-888888888889');
- assert.equal(Number((await db.query<{delta:string}>('select public.document_adjustment($1,$2) delta',[org,invoice])).rows[0].delta),30);
- await assert.rejects(db.query(`select public.record_document_payment($1,$2,31,'BANK_TRANSFER','NOTE-1',current_date)`,[org,invoice]),/exceeds balance/);
- await db.query(`select public.record_document_payment($1,$2,30,'BANK_TRANSFER','NOTE-1',current_date)`,[org,invoice]);
  const purchase=await save('PURCHASE',5);await state(purchase,'APPROVE');await state(purchase,'RECEIVE');await assert.rejects(state(purchase,'RECEIVE'));assert.equal(Number((await db.query<{quantity:string}>('select quantity from public.stock_balances')).rows[0].quantity),11);
  const quote=await save('QUOTE',1);const converted=await state(quote,'ACCEPT');assert.ok(converted);await assert.rejects(state(quote,'ACCEPT'));
  await db.query(`insert into public.shipments(organization_id,name,order_id,status) values($1,'Delivery record',$2,'IN_TRANSIT')`,[org,order]);

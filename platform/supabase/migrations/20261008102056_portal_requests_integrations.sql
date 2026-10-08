@@ -144,16 +144,7 @@ end$$;
 revoke all on function public.review_portal_request(uuid,uuid,text,text,uuid,text) from public,anon;
 grant execute on function public.review_portal_request(uuid,uuid,text,text,uuid,text) to authenticated;
 
-create function private.order_integration_event() returns trigger language plpgsql security definer set search_path='' as $$begin
- if new.kind='ORDER' then
-  if tg_op='INSERT' then
-   insert into public.integration_events(organization_id,event_type,entity_id,payload) values(new.organization_id,'ORDER_CREATED',new.id,jsonb_build_object('number',new.number)) on conflict do nothing;
-  elsif new.state<>old.state then
-   insert into public.integration_events(organization_id,event_type,entity_id,payload) values(new.organization_id,'ORDER_'||new.state,new.id,jsonb_build_object('number',new.number)) on conflict do nothing;
-  end if;
- end if;return new;end$$;
-revoke all on function private.order_integration_event() from public,anon,authenticated;
-create trigger order_integration_event after insert or update on public.business_documents for each row execute function private.order_integration_event();
+-- Existing order tables have no messaging trigger. Future event dispatch requires a separately reviewed release.
 
 -- Transfers post a balanced pair of stock movements in one transaction.
 create table public.stock_transfers (

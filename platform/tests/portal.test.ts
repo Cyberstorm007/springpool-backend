@@ -23,7 +23,7 @@ test('portal isolation, server pricing, review idempotency, disabled integration
  await db.exec(`select set_config('request.jwt.claim.sub','${admin}',false)`);
  const review=async()=>(await db.query<{id:string}>(`select public.review_portal_request($1,$2,'ACCEPTED','Draft ready',$3,'37') id`,[org,id,warehouse])).rows[0].id;
  const order=await review();assert.ok(order);assert.equal(await review(),order);assert.equal((await db.query('select * from public.business_documents')).rows.length,1);
- assert.equal((await db.query('select * from public.integration_events')).rows.length,2);
+ assert.equal((await db.query('select * from public.integration_events')).rows.length,1);
  assert.equal((await db.query('select * from public.message_outbox')).rows.length,0);
  await db.query(`insert into public.messaging_channels(organization_id,channel) values($1,'TELEGRAM')`,[org]);await assert.rejects(db.query(`update public.messaging_channels set status='ACTIVE'`));
  await db.query(`select public.record_stock_change($1,$2,$3,10,'Opening inventory')`,[org,warehouse,product]);
