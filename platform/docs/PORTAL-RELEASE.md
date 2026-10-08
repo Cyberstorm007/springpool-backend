@@ -1,5 +1,7 @@
 # Portal and operations follow-up — 8 October 2026
 
+> Update, 9 October: the user approved the finance migration, and note issuance is now activated with the enterprise design release. See DESIGN-RELEASE.md for current status. The statements below describe the preceding release.
+
 ## Included
 
 - Admin in-app alerts for pending portal requests, low stock balances, overdue leads and tasks. No external messaging is required.

@@ -1,5 +1,7 @@
 # Operations release — 8 October 2026
 
+> Update, 9 October: the user approved the finance migration, and note issuance is now activated with the enterprise design release. See DESIGN-RELEASE.md for current status. The statements below describe the preceding release.
+
 ## Implemented in this release
 
 - Admin-only user invitations, existing-account assignment, role changes and disabling workspace access. The last active administrator cannot be removed. Cross-workspace account assignment is rejected.
