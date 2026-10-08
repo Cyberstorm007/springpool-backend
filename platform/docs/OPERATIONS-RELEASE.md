@@ -28,6 +28,12 @@ Automated PostgreSQL tests apply all executable migrations and exercise tenant i
 
 No real employee, customer, invoice or invitation is created as a production test. End-to-end authenticated browser acceptance and actual invitation-email delivery still require a real authorized session and an intended recipient.
 
+GitHub source commit: `30b3e93bb1fba793046b5262e2b6ed449b58be02`. [CI run 37723988741](https://github.com/Cyberstorm007/springpool-backend/actions/runs/37723988741) passed lint, TypeScript, all 10 automated tests, production dependency audit, Next build and Cloudflare/Vinext build. The operations migration and admin invitation Edge Function were applied to the production project. An unauthenticated request to the invitation endpoint returned HTTP 401.
+
+Cloudflare Worker version `11159220-28f3-4d30-8582-751b623c72d8` was deployed on 8 October at 04:18 UTC. The public health endpoint returned HTTP 200 with `stage: operations` and private/no-store headers. A follow-up database migration revalidates active products, warehouses and counterparties at approval, including rollback of any stock reservations when validation fails; its negative test passes with the complete 10-test suite.
+
+The Supabase security advisor reports intentionally authenticated, guarded [SECURITY DEFINER endpoints](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable) and an inaccessible, RLS-enabled counter table without client policies. [Leaked-password protection](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection) remains disabled in project Auth settings; this release does not claim a fully completed security-hardening phase.
+
 ## Original specification: still not complete
 
 This release is **not completion of the 82-section master requirement**. In particular:

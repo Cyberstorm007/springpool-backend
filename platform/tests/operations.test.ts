@@ -28,6 +28,10 @@ test('operations enforce admin authority, tenant boundaries, stock, credit, invo
  const save=async(kind:string,qty:number,existing:string|null=null)=>{const r=await db.query<{id:string}>(`select public.save_business_document($1,$2,$3,$4,$5,'27',null,'Test document',$6::jsonb) id`,[org,existing,kind,kind==='PURCHASE'?supplier:customer,warehouse,JSON.stringify([{product_id:product,quantity:qty,unit_price:0,tax:0}])]);return r.rows[0].id;};
  const state=async(id:string,command:string)=>(await db.query<{id:string}>('select public.change_document_state($1,$2,$3) id',[org,id,command])).rows[0].id;
  const order=await save('ORDER',4);const doc=(await db.query<{grand_total:string,subtotal:string}>('select * from public.business_documents where id=$1',[order])).rows[0];assert.equal(Number(doc.grand_total),472);assert.equal(Number(doc.subtotal),400);
+ await db.query('update public.products set active=false where id=$1',[product]);
+ await assert.rejects(state(order,'APPROVE'),/Active product required/);
+ assert.equal(Number((await db.query<{reserved:string}>('select reserved from public.stock_balances')).rows[0].reserved),0);
+ await db.query('update public.products set active=true where id=$1',[product]);
  await state(order,'APPROVE');assert.equal(Number((await db.query<{reserved:string}>('select reserved from public.stock_balances')).rows[0].reserved),4);
  await assert.rejects(save('ORDER',3,order),/Only drafts/);await assert.rejects(db.exec('update public.business_documents set grand_total=0'));
  const oversell=await save('ORDER',7);await assert.rejects(state(oversell,'APPROVE'),/Insufficient/);await state(oversell,'CANCEL');
