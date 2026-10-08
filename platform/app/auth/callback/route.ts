@@ -10,7 +10,11 @@ export async function GET(request: NextRequest) {
     return response;
   };
   const code = request.nextUrl.searchParams.get('code');
-  if (!code) return failure();
+  if (!code) {
+    const invite = NextResponse.redirect(new URL('/auth/complete', origin));
+    invite.headers.set('Cache-Control', 'private, no-store');
+    return invite;
+  }
   const response = NextResponse.redirect(new URL('/auth/password', origin));
   response.headers.set('Cache-Control', 'private, no-store');
   const db = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, {

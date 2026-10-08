@@ -10,7 +10,8 @@ function finish(path:string,ok:boolean){revalidatePath(path);redirect(path+'?sta
 export async function saveEmployee(form:FormData){
  const {db,organizationId,manage}=await workforceAccess(); const parsed=employeeInput.safeParse(values(form));
  if(!organizationId||!manage||!parsed.success)redirect('/employees?state=invalid');
- const result=await db.from('employees').insert({...parsed.data,organization_id:organizationId}).select('id').single();
+ const staff=id(form);
+ const result=form.get('id') ? staff.success?await db.from('employees').update(parsed.data).eq('organization_id',organizationId).eq('id',staff.data).select('id').single():{error:true,data:null} : await db.from('employees').insert({...parsed.data,organization_id:organizationId}).select('id').single();
  finish('/employees',!result.error&&!!result.data);
 }
 export async function linkEmployee(form:FormData){
