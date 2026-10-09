@@ -1,0 +1,11 @@
+import Link from 'next/link';
+import {notFound} from 'next/navigation';
+import {Workspace} from '@/components/workspace';
+import {DocumentForm} from '@/components/operations/document-form';
+import {operationsAccess} from '@/lib/operations/access';
+import {documentKinds,money} from '@/lib/operations/config';
+import {documentChoices} from '@/lib/operations/choices';
+export const dynamic='force-dynamic';
+export default async function Documents({params,searchParams}:{params:Promise<{kind:string}>,searchParams:Promise<{page?:string,error?:string}>}){const {kind}=await params;const config=Object.hasOwn(documentKinds,kind)?documentKinds[kind]:null;if(!config)notFound();const a=await operationsAccess();const s=await searchParams;const page=Math.max(1,Math.min(10000,Number(s.page)||1));const {data,error,count}=await a.db.from('business_documents').select('*',{count:'exact'}).eq('organization_id',a.organizationId).eq('kind',config.kind).order('created_at',{ascending:false}).range((page-1)*30,page*30-1);if(error)throw new Error('Unable to load documents.');const choices=a.admin&&config.kind!=='INVOICE'?await documentChoices(a,config.kind):null;
+ return <Workspace email={a.user.email}><header><p className="eyebrow">SALES & PURCHASING</p><h1>{config.title}</h1><p>{config.kind==='INVOICE'?'Issue invoices from dispatched sales orders. Posted invoices retain their original details.':'Create drafts, review totals and move approved documents through their workflow.'}</p></header>{s.error&&<p className="notice" role="alert">{s.error}</p>}{choices&&<details className="panel"><summary>Create {config.title.toLowerCase()}</summary><DocumentForm kind={config.kind} {...choices}/></details>}<section className="panel"><p>{count||0} documents · Page {page}</p><div className="table-wrap"><table><thead><tr><th>Number</th><th>Date</th><th>Status</th><th>Total</th></tr></thead><tbody>{data?.map(d=><tr key={d.id}><td><Link href={'/documents/'+d.id}>{d.number}</Link></td><td>{d.document_date}</td><td><span className="tag">{d.state}</span></td><td>{money(d.grand_total)}</td></tr>)}</tbody></table></div>{!data?.length&&<p>No documents yet.</p>}<div className="inline-form">{page>1&&<Link href={'?page='+(page-1)}>Previous</Link>}{page*30<(count||0)&&<Link href={'?page='+(page+1)}>Next</Link>}</div></section></Workspace>;
+}
